@@ -1,10 +1,13 @@
 ##################################################################################
 # FRONTEND
 ##################################################################################
+import scrabble
+
 
 def quit():
     exit()
 import tkinter as tk
+from tkinter import messagebox
 import sqlite3
 from tkinter import messagebox
 import cv2
@@ -16,17 +19,40 @@ import sudoku
 import tictactoe
 import c4
 
-def database():
+def database(d):
     name=fn.get()
     age = ln.get()
     country = var.get()
     gender = radio_var.get()
-    conn=sqlite3.connect("form.db")
-    with conn:
-        cursor=conn.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS Gamers (Name TEXT,Age TEXT,Country TEXT,Gender TEXT)")
-    cursor.execute("INSERT INTO Gamers(Name,Age,Country,Gender) VALUES(?,?,?,?)",(name,age,country,gender))
-    conn.commit()
+    if name!="" and age!="" and country!="select country" and gender!="":
+        conn=sqlite3.connect("form.db")
+        with conn:
+            cursor=conn.cursor()
+        cursor.execute("SELECT * FROM Gamers")
+
+        rows = cursor.fetchall()
+        k=0
+        for row in rows:
+            if row==(name,age,country,gender):
+                k=1
+                if d==1:
+                    return 1
+                else:
+                    messagebox.showerror("Registration Failed", "User already exists! Try logging in!")
+        if k==0 and d==1:
+            messagebox.showerror("Login Failed", "User dont exists! Try Registering!")
+            return 0
+
+        if k==0:
+            cursor.execute("CREATE TABLE IF NOT EXISTS Gamers (Name TEXT,Age TEXT,Country TEXT,Gender TEXT)")
+            cursor.execute("INSERT INTO Gamers(Name,Age,Country,Gender) VALUES(?,?,?,?)",(name,age,country,gender))
+            conn.commit()
+            secondwin(0)
+
+
+    else:
+        messagebox.showerror("Unable to save details", "One or more fields missing!")
+
 def c():
     import speech_recognition as sr
     r = sr.Recognizer()
@@ -211,32 +237,37 @@ def puzzlewindow():
     window2.mainloop()
 
 
-def secondwin():
-    window1 = tk.Tk()
-    window1.title("AI GAMEZONE")
-    l1 = tk.Label(window1, text="Welcome to AI GAMEZONE", font=("Algerian", 30)).place(x=250, y=40)
-    # l1.grid(column=1,row=0)
-    b1 = tk.Button(window1, text="AI Puzzle", font=("arial", 20), bg="orange", fg="green", command=puzzlewindow).place(x=300,
-                                                                                                                y=150)
-    # b1.grid(column=1,row=1)
+def secondwin(d):
+    result=1
+    if d==1:
+        result=database(1)
+    if result==1:
+        window1 = tk.Tk()
+        window1.title("AI GAMEZONE")
+        l1 = tk.Label(window1, text="Welcome to AI GAMEZONE", font=("Algerian", 30)).place(x=250, y=40)
+        # l1.grid(column=1,row=0)
+        b1 = tk.Button(window1, text="AI Puzzle", font=("arial", 20), bg="orange", fg="green", command=puzzlewindow).place(x=150,
+                                                                                                                    y=150)
+        # b1.grid(column=1,row=1)
 
-    b2 = tk.Button(window1, text="AI sudoku", font=("arial", 20), bg="green", fg="yellow", command=sudoku_diff).place(x=500,
-                                                                                                                y=150)
-    # b2.grid(column=2,row=1)
+        b2 = tk.Button(window1, text="AI sudoku", font=("arial", 20), bg="green", fg="yellow", command=sudoku_diff).place(x=350,
+                                                                                                                    y=150)
+        # b2.grid(column=2,row=1)
+        b8 = tk.Button(window1, text="AI snake game", font=("arial", 20), bg="red", fg="blue", command=sudoku_diff).place(x=550,y=150)
 
-    b3 = tk.Button(window1, text="AI tic-tac-toe", font=("arial", 20), bg="yellow", fg="red", command=ticwindow).place(x=250,
-                                                                                                                y=260)
-    # b3.grid(column=1,row=3)
+        b3 = tk.Button(window1, text="AI tic-tac-toe", font=("arial", 20), bg="yellow", fg="red", command=ticwindow).place(x=150,
+                                                                                                                    y=260)
+        # b3.grid(column=1,row=3)
 
-    b4 = tk.Button(window1, text="AI connect-four", font=("arial", 20), bg="pink", fg="blue", command=c4.c4).place(x=500,
-                                                                                                               y=260)
-    # b4.grid(column=2,row=3)
+        b4 = tk.Button(window1, text="AI connect-four", font=("arial", 20), bg="pink", fg="blue", command=c4.c4).place(x=350,
+                                                                                                                   y=260)
+        # b4.grid(column=2,row=3)
+        b7 = tk.Button(window1, text="AI scrabble", font=("arial", 20), bg="blue", fg="pink", command=scrabble.scrabble).place(x=600,y=260)
+        b5 = tk.Button(window1, text="Quit", font=("arial", 20), bg="purple", fg="white", command=quit).place(x=430, y=370)
+        b6 = tk.Button(window1, text="Say", font=("arial", 20), bg="purple", fg="white", command=c).place(x=430, y=450)
 
-    b5 = tk.Button(window1, text="Quit", font=("arial", 20), bg="purple", fg="white", command=quit).place(x=430, y=370)
-    b6 = tk.Button(window1, text="Say", font=("arial", 20), bg="purple", fg="white", command=c).place(x=430, y=450)
-
-    window1.geometry("1000x600")
-    window1.mainloop()
+        window1.geometry("1000x600")
+        window1.mainloop()
 
 
 window=tk.Tk()
@@ -279,9 +310,10 @@ entry2=tk.Entry(window,textvar=ln).place(x=300,y=180)
 droplist.place(x=300,y=230)
 
 
-b1=tk.Button(window,text="Register",width=12,font=("arial",20),bg="brown",fg="white",command=secondwin).place(x=100,y=330)
+b1=tk.Button(window,text="Login",width=12,font=("arial",20),bg="brown",fg="white",command= lambda:[secondwin(1)]).place(x=100,y=330)
 b2=tk.Button(window,text="Quit",font=("arial",20),bg="brown",fg="white",command=quit).place(x=350,y=330)
-b3=tk.Button(window,text="Save details",width=12,font=("arial",20),bg="brown",fg="white",command=database).place(x=200,y=430)
+label5=tk.Label(window, text="New user?==>",relief="solid",width=20,font=("arial",10,"bold")).place(x=30,y=450)
+b3=tk.Button(window,text="Register",width=12,font=("arial",20),bg="brown",fg="white",command=lambda :[database(0)]).place(x=200,y=430)
 
 img=cv2.imread("images2/image_part_001.jpg")
 print(img.shape)
